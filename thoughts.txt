@@ -1,0 +1,41 @@
+can't build out whole graph and then bfs and dfs it - factorial time
+instead, search by building the tree as you go (kinda like maze exploration?)
+
+so:
+
+start with word0, find all words attached to it, put them in stack/queue
+pop (from whichever end is appropriate)
+find all words attached to that word, add to stack/queue
+pop
+find all attached words, add to container
+pop
+etc
+
+at each word, see if it's our end word
+don't add words already in the path (will this happen? yes, I think)
+it's really a graph, so what counts as a leaf? (I think: no where to go not already included in path)
+could you go somewhere from node i in path which isn't node i-1? (cat, bat, bar, car vs cat, car (dfs, bfs)... dfs could go back to cat or cur, cut, but, bat... so yes, it seems)
+once you hit a leaf and it's not the end word, clearly that's not part of a valid path... but how much to backtrack? In dfs, just get rid of leaf and replace it with next thing in stack... mostly, this replacement word will be a sibling of the leaf and will be fine... but what if leaf is oldest child? Then it's parent is also a bust and need to go to *its* siblings... which are the next things in the stack, so that seems okay. But we still have the parent in the path - how do we know to pop off *two* from the path? (store tuples of kid order, word? Then if kid order is 0, pop two? Is there a better way? equiv to store level, pop two when next word is one level up from just popped word. Also equv to store parent word, current word, pop two when next word has different parent than currently popped word.)
+
+In bfs... push kids but ignore them for the moment, because they're in the back of the line. If current node isn't end word, go onto sibling. In this case, if we find end word, it's likely high in tree and we stop because of success, not exhaustion of things to check. If we get down to leaf, means we've explored the entirety of all levels above it, so only possibility is it's sibling, which is next in queue, so that's fine... but then if it's the youngest child and we need to go on to a new parent, that parent's already been explored, so how to know what it was? STORE PARENT, CURRENT WORD - use custom class + __slots__ for lightest-weight implementation (see https://stackoverflow.com/questions/45123238/python-class-vs-tuple-huge-memory-overhead)
+
+
+
+
+come up with limited legal word set for demo purposes?
+store the diffs or store the whole words?
+should path be stored as a list (order matters) or a set (fast lookup if something's in there) - time both (maybe list is short enough we don't care) and/or maybe use both if set markedly faster (time vs space, as always)
+consider time *and* memory used (size of container) for bfs/dfs (hypothesis: bfs takes more memory, prob also more time, but results in shorter paths, dfs is less memory/time but longer path - test this out)
+time with and without __slots__
+
+
+cat, bat, bar, car vs cat, car (dfs, bfs)
+
+
+Conclusions:
+
+store prev word, current word as each "node" (see above re: __slots__)
+this means words_already_used_in_path can only be a set, because the path comes from the nodes themselves
+
+
+
