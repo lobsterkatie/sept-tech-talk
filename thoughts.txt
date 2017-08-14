@@ -19,6 +19,7 @@ once you hit a leaf and it's not the end word, clearly that's not part of a vali
 
 In bfs... push kids but ignore them for the moment, because they're in the back of the line. If current node isn't end word, go onto sibling. In this case, if we find end word, it's likely high in tree and we stop because of success, not exhaustion of things to check. If we get down to leaf, means we've explored the entirety of all levels above it, so only possibility is it's sibling, which is next in queue, so that's fine... but then if it's the youngest child and we need to go on to a new parent, that parent's already been explored, so how to know what it was? STORE PARENT, CURRENT WORD - use custom class + __slots__ for lightest-weight implementation (see https://stackoverflow.com/questions/45123238/python-class-vs-tuple-huge-memory-overhead)
 
+but what if we need to pop *more than* two? Like, if we reached a leaf with no aunts and uncles, maybe no great aunts or uncles, etc, etc... Okay, so... one possibility is not to keep a set of the path's members at all and just walk the path to see who's in it - this is linear in path_length rather than constant, which isn't great, but it's nice and simple. Another option, which would be faster but take up more space would be for each node in the path linked list to know (via a set) who all its ancestors are. Not sure which is better. (Figuring out exactly how many to remove feels more complicated than it's worth. Premature micro-optimization is the root of all evil, right?)
 
 
 
@@ -27,6 +28,8 @@ store the diffs or store the whole words?
 should path be stored as a list (order matters) or a set (fast lookup if something's in there) - time both (maybe list is short enough we don't care) and/or maybe use both if set markedly faster (time vs space, as always)
 consider time *and* memory used (size of container) for bfs/dfs (hypothesis: bfs takes more memory, prob also more time, but results in shorter paths, dfs is less memory/time but longer path - test this out)
 time with and without __slots__
+"Adventures in Data Structures: How I Made a Simple Problem a Whole Lot More Complicated"
+figure out the details of how many to remove from the set when backtracking
 
 
 cat, bat, bar, car vs cat, car (dfs, bfs)
@@ -35,7 +38,7 @@ cat, bat, bar, car vs cat, car (dfs, bfs)
 Conclusions:
 
 store prev word, current word as each "node" (see above re: __slots__)
-this means words_already_used_in_path can only be a set, because the path comes from the nodes themselves
+this means words_already_used_in_path can be only a set, because the path comes from the nodes themselves
 
 
 
