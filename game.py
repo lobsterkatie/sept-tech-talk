@@ -1,4 +1,6 @@
 from data_structs import Stack, Queue
+from random import shuffle
+from datetime import datetime
 
 
 class WordNode(object):
@@ -20,7 +22,7 @@ class WordNode(object):
         """Provide helpful output when printing"""
 
         repr_str = "<WordNode word={word} parent={parent}>"
-        return repr_str.format(word=self.word, arent=self.parent)
+        return repr_str.format(word=self.word, parent=self.parent.word)
 
 
     def __eq__(self, other):
@@ -52,6 +54,9 @@ class WordNode(object):
 class GameRound(object):
     """One round of a kids game transforming one word to another"""
 
+    # def __new__():
+    #     """Only create the GameRound if words are the same length"""
+
     def __init__(self, start_word, end_word):
         self.start_word = WordNode(start_word)
         #TODO decide if it's worth it to wrap end_word in a WordNode, and make
@@ -60,27 +65,41 @@ class GameRound(object):
         self.end_word = WordNode(end_word)
         # self.DFS_path = [start_word]
         # self.BFS_path = [start_word]
-        self.DFS_path_tail = self.start_word
-        self.BFS_path_tail = self.start_word
+        # self.DFS_path_tail = self.start_word
+        # self.BFS_path_tail = self.start_word
         self.word_length = len(start_word)
-        self.path_found = False
+        # self.path_found = False
+        # self.used_words = set()
 
     def play_game(self):
         """Play the game, recording DFS and BFS solution paths"""
 
-        #get set of legal words
-        #FIXME this shouldn't be brand new each round
-        words_file = open("/usr/share/dict/words")
-        legal_words = {line.strip() for line in words_file}
 
         #do DFS
-
-
-
+        start_time = datetime.now()
+        self.DFS_path = self._do_search("DFS")
+        end_time = datetime.now()
+        self.DFS_time = end_time - start_time
 
         #do BFS
+        start_time = datetime.now()
+        self.BFS_path = self._do_search("BFS")
+        end_time = datetime.now()
+        self.BFS_time = end_time - start_time
 
-    def do_search(self, search_type, legal_words):
+        # import pdb; pdb.set_trace()
+
+        #display the results
+        print "\nDFS\n"
+        self._print_path(self.DFS_path)
+        print self.DFS_time.microseconds / 1000.0, "ms"
+        print "\nBFS\n"
+        self._print_path(self.BFS_path)
+        print self.BFS_time.microseconds / 1000.0, "ms"
+
+
+
+    def _do_search(self, search_type):
         """Perform a DFS or BFS to connect start to end word"""
 
         #determine the search type and create the corresponding data structure
@@ -93,19 +112,21 @@ class GameRound(object):
             raise Exception("invalid search type")
 
 
-        # #we'll start with the start_word
-        # to_be_explored.add(self.start_word)
+        #we'll start with the start_word
+        to_be_explored.add(self.start_word)
 
         #this is the current end of the path (technically the head of a linked
         #list which points backwards, so we can get the whole path by starting
         #here and working our way back to the start_word)
-        path_tail = None
+        # path_tail = None
 
         #so that we don't ever have duplicates in the path, store a set of all
         #words used so far (not WordNodes, just the words themselves; we could
         #walk the path to check if we've already included a word, but that's
         #linear (the path is a linked list) and this is constant)
-        path_members = set()
+        # path_members = set()
+
+        used_words = set([self.start_word.word])
 
 
         #now, time to do the search
@@ -117,13 +138,6 @@ class GameRound(object):
             #get the current word
             current_word = to_be_explored.pop_next()
 
-            #put it in the path by including the word in our set and moving the
-            #tail pointer
-            #(since each WordNode is created knowing who its parent is, as long
-            #as we have the last word in the path, we have the whole path)
-            path_members.add(current_word.word)
-            path_tail = current_word
-
             #check if we've reached our destination, that is, if current_word
             #is end_word; if so, stop looking
             if current_word == self.end_word:
@@ -133,14 +147,26 @@ class GameRound(object):
             #"explore" it, that is, figure out all the places we can go from
             #it and add them to to_be_explored
 
+            #update the path (since each WordNode is created knowing who its
+            #parent is, as long as we have the last word in the path, we have
+            #the whole path)
+            # path_members = self._inventory_path(current_word)
+
+            #add word to set of words we've already used
+            # self.used_words.add(current_word.word)
+
             #store the word as a list of characters for easy substitution
-            current_word_letters = list(current_word)
+            current_word_letters = list(current_word.word)
 
             #considering each character in turn, replace it with every possible
             #letter and, if that makes a legal word, add it to
             #to_be_explored
-            for i in range(self.word_length):
-                for substitute_letter in "abcdefghijklmnopqrstuvwxyz":
+            indices = range(self.word_length)
+            shuffle(indices)
+            for i in indices:
+                letters = list("abcdefghijklmnopqrstuvwxyz")
+                shuffle(letters)
+                for substitute_letter in letters:
 
                     #make a copy of the current word so we can change it
                     #without messing up the original
@@ -156,16 +182,35 @@ class GameRound(object):
                     #in the path
                     #note: could do set subtraction here, but that would create
                     #a whole new set, and no one needs that
-                    if (potential_new_word in legal_words and
-                        potential_new_word not in path_members):
+                    if (potential_new_word in LEGAL_WORDS and
+                        # potential_new_word not in path_members):
+                        potential_new_word not in used_words):
 
                         #if it's a new (and real) word, create a WordNode out
                         #of it and add it to our stack or queue
                         new_word = WordNode(potential_new_word, current_word)
                         to_be_explored.add(new_word)
+                        used_words.add(potential_new_word)
 
             #now that we've found all the places we can go from the current
             #word, move on to the next word
+
+        #once we get here, we've either found our end_word or run out of places
+        #to look - return the appropriate thing in either case
+        if current_word == self.end_word:
+
+            #we found a valid path - return the last word, which is the head
+            #of a linked list contianing the path
+            return current_word
+
+        else:
+
+            #there was no valid path, and we've run out of words to check, so
+            #return None as a flag to denote that
+            return None
+
+
+
 
             #depending on what kind of search we're doing (DFS vs BFS), whether
             #or not current_word is a leaf (it has no legal kids which aren't
@@ -194,7 +239,51 @@ class GameRound(object):
 
         #loop over the letters
 
+    def _inventory_path(self, path_end):
+        """Return a set of all members of the given path (a backwards-pointing
+           linked list). The set only stores the words themselves, not the
+           WordNodes."""
+
+        members = set()
+
+        current = path_end
+
+        while current:
+            members.add(current.word)
+            current = current.parent
+
+        return members
+
+    def _print_path(self, path_end):
+        """Print the path"""
+
+        if not path_end:
+            print "No path found"
+            return
+
+        #FIXME make this print out more nicely
+        path = []
+
+        current = path_end
+
+        while current:
+            path.append(current.word)
+            current = current.parent
+
+        print path[::-1]
+
+
+
+
+
+
+#get set of legal words
+with open("/usr/share/dict/words") as words_file:
+    LEGAL_WORDS = {line.strip() for line in words_file}
 
 
 x = GameRound("cat", "dog")
 x.play_game()
+x = GameRound("happy", "grump")
+x.play_game()
+
