@@ -260,7 +260,7 @@ def do_searches(start_word, end_word, num_trials):
     """Do the requested number of trials and return a dictionary of the results
     """
 
-    #make sure there is a path first - if not, return None
+    #make sure there is a path first by running one trial - if not, return None
     test = GameRound(start_word, end_word)
     if not test.play_game():
         return None
