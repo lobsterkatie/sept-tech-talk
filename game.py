@@ -8,6 +8,8 @@ with open("/usr/share/dict/words") as words_file:
     LEGAL_WORDS = {line.strip() for line in words_file}
 
 
+###############################################################################
+# WordNode class
 
 class WordNode(object):
     """A linked list node used for storing the path from start_word to
@@ -43,6 +45,8 @@ class WordNode(object):
         return not self.__eq__(other)
 
 
+###############################################################################
+# GameRound class
 
 class GameRound(object):
     """One round of a kids game transforming one word to another"""
@@ -90,6 +94,14 @@ class GameRound(object):
         self.DFS_path = self._get_path(self.DFS_path_end)
         self.BFS_path = self._get_path(self.BFS_path_end)
 
+        #calculate the efficiency of each search
+        #(the + 1 is because we don't examine the end_word but it's counted
+        #in the path)
+        self.DFS_efficiency = (len(self.DFS_path) /
+                               float(self.DFS_words_explored + 1))
+        self.BFS_efficiency = (len(self.BFS_path) /
+                               float(self.BFS_words_explored + 1))
+
         #if testing, display the results
         if testing:
             #if a result was found
@@ -104,13 +116,12 @@ class GameRound(object):
                 print "path length:", len(self.BFS_path)
                 print self.BFS_time.microseconds / 1000.0, "ms"
                 print self.BFS_words_explored, "words explored"
+            else:
+                print "No path found between", self.start_word, self.end_word
 
         #return True/False to indicated path found or not
         found = bool(self.DFS_path)
         return found
-
-
-
 
 
     def _do_search(self, search_type, testing=False):
@@ -131,7 +142,7 @@ class GameRound(object):
         #we'll start with the start_word
         to_be_explored.add(self.start_word)
         used_words = set([self.start_word.word])
-        words_explored += 1
+        # words_explored += 1
 
         #as long as there's stuff to examine (and we haven't found the word
         #we're looking for), keep expanding words (figuring out all the legal
@@ -160,7 +171,6 @@ class GameRound(object):
         #if it's the latter, it will be our successful end node
         #return it in either case (also return how many words we expanded)
         return successful_result, words_explored
-
 
 
     def _find_kids(self, current_wordnode, to_be_explored, used_words):
@@ -206,8 +216,6 @@ class GameRound(object):
                 if (potential_new_word in LEGAL_WORDS and
                     potential_new_word not in used_words):
 
-                    # print potential_new_word
-
                     #if it's a new (and real) word, add to the set of
                     #already-used words, then create a WordNode out
                     #of it and add the WordNode to our stack or queue
@@ -222,9 +230,6 @@ class GameRound(object):
         #searching
         return None
         #(yes, I know this would happen anyway; this is clearer)
-
-
-
 
 
     def _get_path(self, path_end):
@@ -248,7 +253,8 @@ class GameRound(object):
         return path[::-1]
 
 
-
+###############################################################################
+# Helper functions
 
 def do_searches(start_word, end_word, num_trials):
     """Do the requested number of trials and return a dictionary of the results
@@ -264,15 +270,14 @@ def do_searches(start_word, end_word, num_trials):
 
     DFS_times = []
     DFS_path_lengths = []
+    DFS_efficiencies = []
     BFS_times = []
     BFS_path_lengths = []
+    BFS_efficiencies = []
     sample_trial_num = randint(0, num_trials - 1)
 
     # run the trials
     for i in xrange(num_trials):
-        #for testing purposes, provide some sense of progress
-        # if i % 10 == 0:
-        #     print i
 
         #do the search
         trial = GameRound(start_word, end_word)
@@ -281,42 +286,89 @@ def do_searches(start_word, end_word, num_trials):
         #record the results
         DFS_times.append(trial.DFS_time.microseconds / 1000.0)
         DFS_path_lengths.append(len(trial.DFS_path))
+        DFS_efficiencies.append(trial.DFS_efficiency)
         BFS_times.append(trial.BFS_time.microseconds / 1000.0)
         BFS_path_lengths.append(len(trial.BFS_path))
+        BFS_efficiencies.append(trial.BFS_efficiency)
         if i == sample_trial_num:
             sample_DFS_path = trial.DFS_path
             sample_BFS_path = trial.BFS_path
 
-    #compute stats for this set of trials
-    avg_DFS_time = sum(DFS_times) / float(num_trials)
-    avg_DFS_path_length = sum(DFS_path_lengths) / float(num_trials)
-    avg_BFS_time = sum(BFS_times) / float(num_trials)
-    avg_BFS_path_length = sum(BFS_path_lengths) / float(num_trials)
-
-    #return the data in dictionary form
-    return {"avg_DFS_time": avg_DFS_time,
-            "avg_DFS_path_length": avg_DFS_path_length,
-            "sample_DFS_path": sample_DFS_path,
-            "avg_BFS_time": avg_BFS_time,
-            "avg_BFS_path_length": avg_BFS_path_length,
-            "sample_BFS_path": sample_BFS_path
+    #return the data in dictionary form, including everything necessary
+    #for adding the data to the database
+    return {"DFS": {"search_type": "DFS",
+                    "start_word": start_word,
+                    "end_word": end_word,
+                    "num_letters": len(start_word),
+                    "num_trials": num_trials,
+                    "avg_path_length": average(DFS_path_lengths),
+                    "avg_search_time": average(DFS_times),
+                    "avg_efficiency": average(DFS_efficiencies),
+                    "med_path_length": median(DFS_path_lengths),
+                    "med_search_time": median(DFS_times),
+                    "med_efficiency": median(DFS_efficiencies),
+                    "sample_path": sample_DFS_path},
+            "BFS": {"search_type": "BFS",
+                    "start_word": start_word,
+                    "end_word": end_word,
+                    "num_letters": len(start_word),
+                    "num_trials": num_trials,
+                    "avg_path_length": average(BFS_path_lengths),
+                    "avg_search_time": average(BFS_times),
+                    "avg_efficiency": average(BFS_efficiencies),
+                    "med_path_length": median(BFS_path_lengths),
+                    "med_search_time": median(BFS_times),
+                    "med_efficiency": median(BFS_efficiencies),
+                    "sample_path": sample_BFS_path}
             }
 
 
+def average(nums):
+    """Return the mean of the given list of values
+
+    >>> average([1, 6, 10, 4, 3])
+    4.8
+
+    >>> average([2, 5, 8, 1])
+    4.0
+
+    """
+
+    return sum(nums) / float(len(nums))
 
 
 
+def median(nums):
+    """Return the median value from the given list
 
-from pprint import pprint
+    >>> median([3, 5, 1, 4, 2])
+    3
 
-# x = GameRound("cat", "dog")
-# x.play_game(testing=True)
-# x = GameRound("circle", "square")
-# x.play_game()
+    >>> median([3, 2, 4, 1])
+    2.5
 
-pprint(do_searches("cat", "dog", 100))
-pprint(do_searches("cat", "dog", 100))
-pprint(do_searches("cat", "dog", 100))
-pprint(do_searches("cat", "dog", 100))
-pprint(do_searches("cat", "dog", 100))
-pprint(do_searches("cat", "dog", 100))
+    """
+
+    sorted_nums = sorted(nums)
+    num_count = len(nums)
+    if num_count % 2 == 0:
+        num1 = sorted_nums[num_count / 2 - 1]
+        num2 = sorted_nums[num_count / 2]
+        return (num1 + num2) / 2.0
+    else:
+        return sorted_nums[num_count / 2]
+
+
+###############################################################################
+# Test cases
+
+if __name__ == "__main__":
+
+    from pprint import pprint
+
+    x = GameRound("cat", "dog")
+    x.play_game(testing=True)
+    x = GameRound("head", "tail")
+    x.play_game(testing=True)
+
+    pprint(do_searches("cat", "dog", 100))
