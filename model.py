@@ -1,6 +1,32 @@
 from flask_sqlalchemy import SQLAlchemy
+from json import dumps
 
 db = SQLAlchemy()
+
+##############################################################################
+# JSON mixin
+
+
+class JSONMixin(object):
+    """Provides a method to return a JSON version of a model class."""
+
+    def json(self):
+        """Return a JSON string representing the object"""
+
+        dict_of_obj = {}
+
+        #iterate through the table's columns, adding the value in each
+        #to the dictionary
+        for column_name in self.__mapper__.column_attrs.keys():
+            value = getattr(self, column_name, None)
+            dict_of_obj[column_name] = value
+
+        #jsonify the completed dictionary and return the resulting string
+        return dumps(dict_of_obj)
+
+
+##############################################################################
+# Model definitions
 
 
 class Search(db.Model):
@@ -17,9 +43,14 @@ class Search(db.Model):
     start_word = db.Column(db.String(32), nullable=False)
     end_word = db.Column(db.String(32), nullable=False)
     num_letters = db.Column(db.Integer, nullable=False)
+    num_trials = db.Column(db.Integer, nullable=False)
     avg_path_length = db.Column(db.Float, nullable=False)
     avg_search_time = db.Column(db.Float, nullable=False) #in ms
-
+    avg_efficiency = db.Column(db.Float, nullable=False)
+    med_path_length = db.Column(db.Float, nullable=False)
+    med_search_time = db.Column(db.Float, nullable=False) #in ms
+    med_efficiency = db.Column(db.Float, nullable=False)
+    sample_path = db.Column(db.Text, nullable=False)
 
     def __repr__(self):
         """Provide helpful representation when printed"""
@@ -39,7 +70,7 @@ def connect_to_db(app):
     """Connect the database to our Flask app."""
 
     # Configure to use our SQLite database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///wordladder'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///doublets'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.app = app
     db.init_app(app)
