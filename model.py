@@ -4,6 +4,28 @@ from json import dumps
 db = SQLAlchemy()
 
 ##############################################################################
+# ToDict mixin
+
+
+class ToDictMixin(object):
+    """Provides a method to return a dictionary version of a model class."""
+
+    def to_dict(self):
+        """Returns a dictionary representing the object"""
+
+        dict_of_obj = {}
+
+        #iterate through the table's columns, adding the value in each
+        #to the dictionary
+        for column_name in self.__mapper__.column_attrs.keys():
+            value = getattr(self, column_name, None)
+            dict_of_obj[column_name] = value
+
+        #return the completed dictionary
+        return dict_of_obj
+
+
+##############################################################################
 # JSON mixin
 
 
@@ -29,7 +51,7 @@ class JSONMixin(object):
 # Model definitions
 
 
-class Search(db.Model):
+class Search(ToDictMixin, db.Model):
     """A set of searches between a given pair of words, either BF or DF
 
        The assumption here is that only word pairs which are connected by
