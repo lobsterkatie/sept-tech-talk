@@ -6,6 +6,8 @@ from datetime import datetime
 #get set of legal words
 with open("/usr/share/dict/words") as words_file:
     LEGAL_WORDS = {line.strip() for line in words_file}
+with open("more_words.txt") as more_words_file:
+    LEGAL_WORDS.update(line.strip() for line in more_words_file)
 
 
 ###############################################################################
@@ -83,6 +85,15 @@ class GameRound(object):
         end_time = datetime.now()
         self.DFS_time = end_time - start_time
 
+        #before we do more work, figure out if this was a successful search
+        #if not, bail now
+        if not self.DFS_path_end:
+            if testing:
+                print "No path found between", self.start_word, self.end_word
+            return False
+
+        #if we get here, we know there is a path, so keep going
+
         #do BFS, and time it
         start_time = datetime.now()
         self.BFS_path_end, self.BFS_words_explored = (
@@ -104,24 +115,19 @@ class GameRound(object):
 
         #if testing, display the results
         if testing:
-            #if a result was found
-            if self.DFS_path:
-                print "\nDFS\n"
-                print self.DFS_path
-                print "path length:", len(self.DFS_path)
-                print self.DFS_time.microseconds / 1000.0, "ms"
-                print self.DFS_words_explored, "words explored"
-                print "\nBFS\n"
-                print self.BFS_path
-                print "path length:", len(self.BFS_path)
-                print self.BFS_time.microseconds / 1000.0, "ms"
-                print self.BFS_words_explored, "words explored"
-            else:
-                print "No path found between", self.start_word, self.end_word
+            print "\nDFS\n"
+            print self.DFS_path
+            print "path length:", len(self.DFS_path)
+            print self.DFS_time.microseconds / 1000.0, "ms"
+            print self.DFS_words_explored, "words explored"
+            print "\nBFS\n"
+            print self.BFS_path
+            print "path length:", len(self.BFS_path)
+            print self.BFS_time.microseconds / 1000.0, "ms"
+            print self.BFS_words_explored, "words explored"
 
-        #return True/False to indicated path found or not
-        found = bool(self.DFS_path)
-        return found
+        #return True to indicated path found
+        return True
 
 
     def _do_search(self, search_type, testing=False):
@@ -260,6 +266,22 @@ def do_searches(start_word, end_word, num_trials):
     """Do the requested number of trials and return a dictionary of the results
     """
 
+    #make sure the search is a legit one - both words have to be legal words,
+    #they must be different words, and must be the same length
+    errors = []
+    if start_word not in LEGAL_WORDS:
+        errors.append(start_word + " is not a legal word")
+    if end_word not in LEGAL_WORDS:
+        errors.append(end_word + " is not a legal word")
+    if start_word == end_word:
+        errors.append("words must be different")
+    if len(start_word) != len(end_word):
+        errors.append("words must be of the same length")
+
+    # if errors:
+
+
+
     #make sure there is a path first by running one trial - if not, return None
     test = GameRound(start_word, end_word)
     if not test.play_game():
@@ -278,6 +300,9 @@ def do_searches(start_word, end_word, num_trials):
 
     # run the trials
     for i in xrange(num_trials):
+
+        if i % 10 == 0:
+            print i
 
         #do the search
         trial = GameRound(start_word, end_word)
