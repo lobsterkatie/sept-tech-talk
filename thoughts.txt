@@ -42,3 +42,8 @@ this means words_already_used_in_path can be only a set, because the path comes 
 
 
 
+
+better to check if any KIDS are the word rather than if the current word is the word, because that way we know we've succeeded a whole depth-level sooner
+
+
+TODO: validate form entries for legality of words, words same length, words different
