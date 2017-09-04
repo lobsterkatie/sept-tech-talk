@@ -15,7 +15,7 @@ app = Flask(__name__)
 app.jinja_env.undefined = StrictUndefined
 
 # FIXME take this out if the bug is fixed
-# app.jinja_env.auto_reload = True
+app.jinja_env.auto_reload = True
 
 
 @app.route("/")
