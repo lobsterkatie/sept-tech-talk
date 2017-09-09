@@ -1,3 +1,8 @@
+am is
+at in
+aw ya
+be am
+by me
 do re
 er um
 et tu
@@ -6,15 +11,23 @@ go to
 hi yo
 if so
 in to
+it he
 la ti
+me id
 mi fa
+mu pi
 my ox
 no si
+of by
 oh hi
 oh my
+pa me
 re mi
 so la
 ti do
+up do
+ya no
+we us
 
 all row
 ant bug
@@ -118,6 +131,7 @@ wolf howl
 work play
 yoga pose
 
+agile scrum
 apple phone
 beach shell
 birth death
@@ -163,17 +177,34 @@ upper bound
 vista point
 wrist brace
 
+batter strike
+buckle collar
+button zipper
 canine feline
+carrot potato
 cookie cutter
 family dinner
+ferret weasel
 flower basket
+golden ticket
+humble modest
+invent patent
+lawyer jurist
+metric wrench
 monkey banana
 morose donkey
 number letter
 prison warden
+random sorted
+ransom demand
 recipe search
+recite pledge
 remote nearby
 rubber mallet
 silver polish
+singer sewing
+sleepy kitten
+stream buffer
+tangle weaver
 winter season
 
