@@ -65,7 +65,7 @@ class Search(ToDictMixin, db.Model):
     search_type = db.Column(db.String(3), nullable=False) #"DFS" or "BFS"
     start_word = db.Column(db.String(32), nullable=False)
     end_word = db.Column(db.String(32), nullable=False)
-    num_letters = db.Column(db.Integer, nullable=False)
+    word_length = db.Column(db.Integer, nullable=False)
     num_trials = db.Column(db.Integer, nullable=False)
     avg_path_length = db.Column(db.Float, nullable=False)
     avg_search_time = db.Column(db.Float, nullable=False) #in ms
