@@ -1,0 +1,11 @@
+.results-cell {
+    background: #6093E5;
+    margin: 3px;
+}
+
+td, th {
+    background: #6093E5;
+    border: none;
+    margin: 3px;
+    width: 200px;
+}
