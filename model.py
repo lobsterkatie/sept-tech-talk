@@ -1,3 +1,4 @@
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from json import dumps
 
@@ -72,7 +73,7 @@ class Search(ToDictMixin, db.Model):
     med_path_length = db.Column(db.Float, nullable=False)
     med_search_time = db.Column(db.Float, nullable=False) #in ms
     med_efficiency = db.Column(db.Float, nullable=False)
-    sample_path = db.Column(db.Text, nullable=False)
+    sample_path = db.Column(db.ARRAY(db.String(16)), nullable=False)
 
     def __repr__(self):
         """Provide helpful representation when printed"""
@@ -83,6 +84,20 @@ class Search(ToDictMixin, db.Model):
                                s_type=self.search_type)
 
 
+class Word(db.Model):
+    """A legal word, along with its degree"""
+
+    __tablename__ = "words"
+
+    word_id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String(32), nullable=False)
+    degree = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        """Provide helpful representation when printed"""
+
+        repr_str = "<Word {word}>"
+        return repr_str.format(word=self.word)
 
 
 ##############################################################################
@@ -99,9 +114,9 @@ def connect_to_db(app):
 
 
 if __name__ == "__main__":
-    # As a convenience, if we run this module interactively, it will leave
-    # you in a state of being able to work with the database directly.
 
-    from server import app
+    #create a fake flask app, so that we can talk to the database by running
+    #this file directly
+    app = Flask(__name__)
     connect_to_db(app)
     print "Connected to DB."

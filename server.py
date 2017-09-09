@@ -2,6 +2,7 @@
 
 from jinja2 import StrictUndefined
 from flask import Flask, render_template, request, jsonify
+from flask_migrate import Migrate
 from model import db, connect_to_db, Search
 from game import *
 # from utilities import *
@@ -16,6 +17,10 @@ app.jinja_env.undefined = StrictUndefined
 
 # FIXME take this out if the bug is fixed
 app.jinja_env.auto_reload = True
+
+#make the database and migrations work
+connect_to_db(app)
+migrate = Migrate(app, db)
 
 
 @app.route("/")
@@ -62,13 +67,8 @@ def do_search():
 
 
 
-
-
 if __name__ == "__main__":
     """If we run this file from the command line, do this stuff"""
 
     app.debug = True
-
-    connect_to_db(app)
-
     app.run()
