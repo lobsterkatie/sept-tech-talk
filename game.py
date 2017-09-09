@@ -8,6 +8,8 @@ with open("/usr/share/dict/words") as words_file:
     LEGAL_WORDS = {line.strip() for line in words_file}
 with open("more_words.txt") as more_words_file:
     LEGAL_WORDS.update(line.strip() for line in more_words_file)
+#remove proper nouns
+LEGAL_WORDS = {word for word in LEGAL_WORDS if not word.istitle()}
 
 
 ###############################################################################
