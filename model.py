@@ -1,4 +1,3 @@
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from json import dumps
 
@@ -70,10 +69,12 @@ class Search(ToDictMixin, db.Model):
     avg_path_length = db.Column(db.Float, nullable=False)
     avg_search_time = db.Column(db.Float, nullable=False) #in ms
     avg_efficiency = db.Column(db.Float, nullable=False)
+    avg_words_explored = db.Column(db.Float, nullable=False)
     med_path_length = db.Column(db.Float, nullable=False)
     med_search_time = db.Column(db.Float, nullable=False) #in ms
     med_efficiency = db.Column(db.Float, nullable=False)
-    sample_path = db.Column(db.ARRAY(db.String(16)), nullable=False)
+    med_words_explored = db.Column(db.Float, nullable=False)
+    sample_path = db.Column(db.ARRAY(db.String(32)), nullable=False)
 
     def __repr__(self):
         """Provide helpful representation when printed"""
@@ -107,7 +108,7 @@ def connect_to_db(app):
     """Connect the database to our Flask app."""
 
     # Configure to use our SQLite database
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///doublets'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///doublets7'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.app = app
     db.init_app(app)
@@ -117,6 +118,7 @@ if __name__ == "__main__":
 
     #create a fake flask app, so that we can talk to the database by running
     #this file directly
+    from flask import Flask
     app = Flask(__name__)
     connect_to_db(app)
     print "Connected to DB."
