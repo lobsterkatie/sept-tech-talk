@@ -1,16 +1,19 @@
-from model import Search, Word, db, connect_to_db
-from server import app
+from model import Search, Word, db
 from game import do_searches, LEGAL_WORDS
 from itertools import product
+from random import sample
+from sqlalchemy.sql.functions import char_length
 
-connect_to_db(app)
 
+def seed_pairs(num_trials, pairs=None):
+    """Seed the DB either with the word pairs given or with the word pairs
+       in seed_pairs.txt. For each pair, run num_trials trials."""
 
-def seed_pairs():
-    """Seed the DB with the word pairs in seed_pairs.txt"""
-
-    with open("seed_pairs.txt") as seed_file:
-        pairs = [line.strip().split(" ") for line in seed_file if line != "\n"]
+    if not pairs:
+        with open("seed_pairs.txt") as seed_file:
+            pairs = [line.strip().split(" ")
+                     for line in seed_file
+                     if line != "\n"]
 
     pairs_added = 0
 
@@ -43,7 +46,7 @@ def seed_pairs():
 
         #if we've made it to here, this is a new pair, so run the search and
         #add the results to the database if a path is found
-        results = do_searches(start_word, end_word, 1000)
+        results = do_searches(start_word, end_word, num_trials)
         if results:
             print "PATH FOUND: (", start_word, end_word, ")"
             dfs_result = Search(**results["DFS"])
@@ -51,11 +54,14 @@ def seed_pairs():
             db.session.add_all([dfs_result, bfs_result])
             db.session.commit()
             pairs_added += 1
-        #if a path isn't found, add the pair to unconnected.txt
+        #if a path isn't found, and we're seeding custom-curated pairs, add
+        #the pair to unconnected.txt
         else:
             print "NO PATH FOUND: (", start_word, end_word, ")"
-            with open("unconnected.txt", "a") as unconnected_words_file:
-                unconnected_words_file.write(start_word + " " + end_word + "\n")
+            if not pairs:
+                with open("unconnected.txt", "a") as unconnected_words_file:
+                    unconnected_words_file.write(
+                        start_word + " " + end_word + "\n")
 
     print "\n\nPAIRS ADDED:", pairs_added
 
@@ -129,9 +135,55 @@ def seed_words(update=False, words_to_add=None):
     print "\n\nWORDS UPDATED:", words_updated
 
 
+def make_random_pairs(min_word_length,
+                      max_word_length,
+                      num_pairs_per_word_length):
+    """Come up with random pairs to test. Returns a set of tuples."""
 
-seed_pairs()
+    pairs = set()
 
-# note: these take a loooooong time to run - uncomment with care
-# seed_words()
-# seed_words(update=True)
+    #create num_pairs for each requested word length
+    for word_length in range(min_word_length, max_word_length + 1):
+
+        #get all non-island (degree >= 1) words of the current length out of
+        #the database
+        words = (Word.query.filter(char_length(Word.word) == word_length,
+                                   Word.degree != 0)
+                           .all())
+
+        #grab num_pairs random pairs of them and add them to our set
+        for _ in range(num_pairs_per_word_length):
+            pairs.add(tuple([word.word for word in sample(words, 2)]))
+
+
+    return pairs
+
+
+
+if __name__ == "__main__":
+
+    #if we're running this file directly (which, to be fair, we always should
+    #be), create a fake Flask app so we can talk to the database
+    from flask import Flask
+    from model import connect_to_db
+    app = Flask(__name__)
+    connect_to_db(app)
+    print "Connected to DB."
+
+
+    #uncomment any of the following to run them
+    #note that the functions seeding words take a loooooong time to run, so
+    #uncomment them with care
+
+    #to add curated pairs to the database
+    # seed_pairs(num_trials=1000)
+
+    #to add random pairs to the database
+    # pairs = make_random_pairs(11, 16, 100)
+    # seed_pairs(num_trials=1, pairs=pairs)
+
+    #to add new words to the database
+    # seed_words()
+
+    #to update the degrees of all words after new words have been added
+    # seed_words(update=True)
