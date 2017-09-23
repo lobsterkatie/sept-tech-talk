@@ -1,4 +1,5 @@
 from data_structs import Stack, Queue
+from stats import average, median
 from random import shuffle, randint
 from datetime import datetime
 
@@ -295,15 +296,18 @@ def do_searches(start_word, end_word, num_trials):
     DFS_times = []
     DFS_path_lengths = []
     DFS_efficiencies = []
+    DFS_words_exploreds = []
     BFS_times = []
     BFS_path_lengths = []
     BFS_efficiencies = []
+    BFS_words_exploreds = []
     sample_trial_num = randint(0, num_trials - 1)
 
     # run the trials
     for i in xrange(num_trials):
 
-        if i % 10 == 0:
+        #provide a sense of progress if doing multiple trials
+        if i % 10 == 0 and i > 0:
             print i
 
         #do the search
@@ -314,9 +318,11 @@ def do_searches(start_word, end_word, num_trials):
         DFS_times.append(trial.DFS_time.microseconds / 1000.0)
         DFS_path_lengths.append(len(trial.DFS_path))
         DFS_efficiencies.append(trial.DFS_efficiency)
+        DFS_words_exploreds.append(trial.DFS_words_explored)
         BFS_times.append(trial.BFS_time.microseconds / 1000.0)
         BFS_path_lengths.append(len(trial.BFS_path))
         BFS_efficiencies.append(trial.BFS_efficiency)
+        BFS_words_exploreds.append(trial.BFS_words_explored)
         if i == sample_trial_num:
             sample_DFS_path = trial.DFS_path
             sample_BFS_path = trial.BFS_path
@@ -326,64 +332,33 @@ def do_searches(start_word, end_word, num_trials):
     return {"DFS": {"search_type": "DFS",
                     "start_word": start_word,
                     "end_word": end_word,
-                    "num_letters": len(start_word),
+                    "word_length": len(start_word),
                     "num_trials": num_trials,
                     "avg_path_length": average(DFS_path_lengths),
                     "avg_search_time": average(DFS_times),
                     "avg_efficiency": average(DFS_efficiencies),
+                    "avg_words_explored": average(DFS_words_exploreds),
                     "med_path_length": median(DFS_path_lengths),
                     "med_search_time": median(DFS_times),
                     "med_efficiency": median(DFS_efficiencies),
+                    "med_words_explored": median(DFS_words_exploreds),
                     "sample_path": sample_DFS_path},
             "BFS": {"search_type": "BFS",
                     "start_word": start_word,
                     "end_word": end_word,
-                    "num_letters": len(start_word),
+                    "word_length": len(start_word),
                     "num_trials": num_trials,
                     "avg_path_length": average(BFS_path_lengths),
                     "avg_search_time": average(BFS_times),
                     "avg_efficiency": average(BFS_efficiencies),
+                    "avg_words_explored": average(BFS_words_exploreds),
                     "med_path_length": median(BFS_path_lengths),
                     "med_search_time": median(BFS_times),
                     "med_efficiency": median(BFS_efficiencies),
+                    "med_words_explored": median(BFS_words_exploreds),
                     "sample_path": sample_BFS_path}
             }
 
-
-def average(nums):
-    """Return the mean of the given list of values
-
-    >>> average([1, 6, 10, 4, 3])
-    4.8
-
-    >>> average([2, 5, 8, 1])
-    4.0
-
-    """
-
-    return sum(nums) / float(len(nums))
-
-
-
-def median(nums):
-    """Return the median value from the given list
-
-    >>> median([3, 5, 1, 4, 2])
-    3
-
-    >>> median([3, 2, 4, 1])
-    2.5
-
-    """
-
-    sorted_nums = sorted(nums)
-    num_count = len(nums)
-    if num_count % 2 == 0:
-        num1 = sorted_nums[num_count / 2 - 1]
-        num2 = sorted_nums[num_count / 2]
-        return (num1 + num2) / 2.0
-    else:
-        return sorted_nums[num_count / 2]
 
 
 ###############################################################################
