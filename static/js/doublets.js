@@ -32,6 +32,7 @@ $(document).ready(function () {
     const dfsColor = "blue";
     const bfsColor = "red";
     Chart.defaults.global.elements.line.fill = false;
+    Chart.defaults.global.animation.duration = 750;
 
     //the chart, chart data, and options are declared globally so they can be
     //changed by various functions
@@ -110,6 +111,10 @@ $(document).ready(function () {
         chartData.datasets[0].data = data.BFS;
         chartData.datasets[1].data = data.DFS;
         chartOptions.scales.yAxes[0].scaleLabel.labelString = data.yAxisLabel;
+
+        if (resultsChart) {
+            resultsChart.destroy();
+        }
 
         //create (or recreate) the chart
         const chartContext = $("#results-graph")[0].getContext('2d');
