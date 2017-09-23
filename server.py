@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_migrate import Migrate
 from model import db, connect_to_db, Search
 from game import *
-# from utilities import *
+from stats import compute_stats
 
 app = Flask(__name__)
 
@@ -52,7 +52,7 @@ def do_search():
                         "DFS": prev_results[1].to_dict()})
 
     #otherwise, if this is a new word pair, run searches
-    results = do_searches(start_word, end_word, 1000)
+    results = do_searches(start_word, end_word, 1)
 
     #if a path was found, record data in the DB
     if results:
@@ -65,10 +65,33 @@ def do_search():
     return jsonify(results)
 
 
+@app.route("/chart-data.json")
+def get_chart_data():
+    """Calculate stats for charts and return them to the front end.
+
+       Data is a dictionary of the form: {
+            "wordLengths": <x-axis labels for chart; range(2, 11)>,
+            "pathLength": {
+                "yAxisLabel": <string>,
+                "BFS": [list of median path lengths, ordered by num_letters],
+                "DFS": [list of median path lengths, ordered by num_letters]
+            },
+            "searchTime": {dict similar to pathLength dict},
+            "wordsExplored": {dict similar to pathLength dict},
+            "efficiency": {dict similar to pathLength dict}
+       }
+
+    """
+
+    return jsonify(current_stats)
 
 
 if __name__ == "__main__":
     """If we run this file from the command line, do this stuff"""
+
+    #assuming that the stats won't change very often or very much, for the
+    #moment get the stats on server start-up, to make pageload way faster
+    current_stats = compute_stats()
 
     app.debug = True
     app.run()
