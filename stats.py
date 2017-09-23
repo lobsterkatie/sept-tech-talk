@@ -1,9 +1,5 @@
-from model import db, Search, Word
+from model import db, Search
 from collections import defaultdict
-
-
-class PrettyDefaultDict(defaultdict):
-    __repr__ = dict.__repr__
 
 
 def average(nums):
@@ -42,16 +38,32 @@ def median(nums):
         return sorted_nums[num_count / 2]
 
 
-def compute_stats():
-    """Compute various stats"""
+def compute_graph_stats():
+    """Compute various stats for graphing purposes.
 
-    #group the searches by search type and word length
-    search_stats = PrettyDefaultDict(dict)
-    stats_for_graphs = PrettyDefaultDict(lambda: PrettyDefaultDict(list))
+       Returns a dictionary of the form {
+            "wordLengths": <x-axis labels for chart; range(2, 11)>,
+            "pathLength": {
+                "yAxisLabel": <string>,
+                "BFS": [list of median path lengths, ordered by num_letters],
+                "DFS": [list of median path lengths, ordered by num_letters]
+            },
+            "searchTime": {dict similar to pathLength dict},
+            "wordsExplored": {dict similar to pathLength dict},
+            "efficiency": {dict similar to pathLength dict}
+       }
+
+    """
+
+    #create a dictionary to hold the stats
+    #note that it's set up as a defaultdict of defaultdicts, so as not to have
+    #to create the structure ahead of time (the "pretty" is so it can be
+    #pretty-printed for debugging purposes)
+    stats = PrettyDefaultDict(lambda: PrettyDefaultDict(list))
+
+    #compute the stats and add them to the dictionary
     for search_type in ["BFS", "DFS"]:
         for word_length in range(2, 11):
-            #create a dictionary to hold the stats
-            stats = {}
 
             #get all the relevant searches out of the database
             searches = (
@@ -63,67 +75,43 @@ def compute_stats():
             #efficiency, and words explored
             med_path_length = median([search.med_path_length
                                       for search in searches])
+            stats["pathLength"][search_type].append(
+                int(round(med_path_length)))
+
 
             med_search_time = median([search.med_search_time
                                       for search in searches])
+            stats["searchTime"][search_type].append(
+                round(med_search_time, 1))
+
 
             med_efficiency = median([search.med_efficiency
                                      for search in searches])
+            stats["efficiency"][search_type].append(
+                round(100 * med_efficiency, 1))
+
 
             med_words_explored = median([search.med_words_explored
                                          for search in searches])
+            stats["wordsExplored"][search_type].append(
+                int(round(med_words_explored)))
 
-            stats["med_path_length"] = int(round(med_path_length))
-            stats["med_search_time"] = round(med_search_time, 1)
-            stats["med_efficiency"] = round(100 * med_efficiency, 1)
-            # stats["med_words_explored1"] = int(100 * med_path_length / med_efficiency)
-            stats["med_words_explored"] = int(round(med_words_explored))
-
-            #put the stats into the larger dictionary
-            search_stats[search_type][word_length] = stats
-
-            stats_for_graphs["pathLength"][search_type].append(
-                 stats["med_path_length"])
-            stats_for_graphs["searchTime"][search_type].append(
-                 stats["med_search_time"])
-            stats_for_graphs["efficiency"][search_type].append(
-                 stats["med_efficiency"])
-            stats_for_graphs["wordsExplored"][search_type].append(
-                 stats["med_words_explored"])
 
     #add metadata to the dictionary for graphing purposes
-    stats_for_graphs["wordLengths"] = range(2, 11)
-    stats_for_graphs["pathLength"]["yAxisLabel"] = "num words in path"
-    stats_for_graphs["searchTime"]["yAxisLabel"] = "search time (ms)"
-    stats_for_graphs["wordsExplored"]["yAxisLabel"] = "num words explored"
-    stats_for_graphs["efficiency"]["yAxisLabel"] = "% of explored words used"
+    stats["wordLengths"] = range(2, 11)
+    stats["pathLength"]["yAxisLabel"] = "num words in path"
+    stats["searchTime"]["yAxisLabel"] = "search time (ms)"
+    stats["wordsExplored"]["yAxisLabel"] = "num words explored"
+    stats["efficiency"]["yAxisLabel"] = "% of explored words used"
+
+    # pprint(stats)
+
+    return stats
 
 
-    # from pprint import pprint
-    # pprint(search_stats)
-    # # pprint(search_stats["DFS"])
-    # print
-    # print
-    # # pprint(search_stats["BFS"])
-    # pprint(stats_for_graphs)
-
-    return stats_for_graphs
-
-    # stats = defaultdict(lamda: defaultdict())
-
-    # path_length_stats = defaultdict(dict)
-    # for search_type in ["BFS", "DFS"]:
-    #     for word_length in range(2, 7):
-    #         path_length_stats[search_type][word_length]["med_path_length"] = (
-    #             median([search.path_length for search in ]))
-
-# def compute_stats2():
-#     """Compute stats, grouped by stat and search type. Each collection of stats
-#        is a list of 5 values, corresponding to words of lengths 2 through 6."""
-
-
-
-
+class PrettyDefaultDict(defaultdict):
+    """A hack to make defaultdicts pretty-printable"""
+    __repr__ = dict.__repr__
 
 
 

@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_migrate import Migrate
 from model import db, connect_to_db, Search
 from game import *
-from stats import compute_stats
+from stats import compute_graph_stats
 
 app = Flask(__name__)
 
@@ -83,15 +83,18 @@ def get_chart_data():
 
     """
 
-    return jsonify(current_stats)
+    #note that for the moment, the actual calculations are being done on
+    #server start-up, to dramatically increase pageload performance
+    return jsonify(chart_data)
 
 
 if __name__ == "__main__":
     """If we run this file from the command line, do this stuff"""
 
-    #assuming that the stats won't change very often or very much, for the
-    #moment get the stats on server start-up, to make pageload way faster
-    current_stats = compute_stats()
+    #assuming that the stats for the charts won't change very often or very
+    #much, for the moment get the stats on server start-up, to make pageload
+    #way faster
+    chart_data = compute_graph_stats()
 
     app.debug = True
     app.run()
